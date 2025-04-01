@@ -138,7 +138,7 @@ namespace graph{
                 int v = neighbor->vertex;
                 int weight = neighbor->weight;
     
-                relax(u, v, weight, distances, parent, pq);  // שימוש בפונקציה החדשה
+                relax(u, v, weight, distances, parent, pq); 
     
                 neighbor = neighbor->next;
             }
@@ -158,5 +158,123 @@ namespace graph{
     
         return shortestTree;
     }
+
+// ============================
+//         PRIM SECTION
+// ============================
+
+    Graph Algorithms::prim(Graph& g) {
+        int V = g.getNumVertices();
+        Graph mst(V);
+        bool* visited = new bool[V];
+        int* parent = new int[V];
+        int* key = new int[V];
+    
+        for (int i = 0; i < V; i++) {
+            visited[i] = false;
+            key[i] = 2147483647;
+            parent[i] = -1;
+        }
+    
+        key[0] = 0;
+        PriorityQueue pq(V);
+        pq.insert(0, 0);
+    
+        while (!pq.isEmpty()) {
+            int u = pq.extractMin();
+            visited[u] = true;
+    
+            Node* neighbor = g.getAdjList()[u];
+            while (neighbor != nullptr) {
+                int v = neighbor->vertex;
+                int weight = neighbor->weight;
+    
+                if (!visited[v] && weight < key[v]) {
+                    key[v] = weight;
+                    parent[v] = u;
+                    pq.insert(v, key[v]);
+                }
+    
+                neighbor = neighbor->next;
+            }
+        }
+    
+        for (int v = 1; v < V; v++) {
+            if (parent[v] != -1) {
+                int weight = key[v];
+                mst.addEdge(parent[v], v, weight); 
+            }
+        }
+    
+        delete[] visited;
+        delete[] parent;
+        delete[] key;
+    
+        return mst;
+    }
+
+
+// ============================
+//       KRUSKAL SECTION
+// ============================
+Graph Algorithms::kruskal(Graph& g) {
+    int V = g.getNumVertices();
+    Edge* edges = new Edge[V * V];
+    int edgeCount = 0;
+    Node** adjList = g.getAdjList();
+
+    for (int u = 0; u < V; u++) {
+        Node* neighbor = adjList[u];
+        while (neighbor != nullptr) {
+            int v = neighbor->vertex;
+            int w = neighbor->weight;
+            if (u < v) {
+                edges[edgeCount++] = {u, v, w};
+            }
+            neighbor = neighbor->next;
+        }
+    }
+
+    // מיון פשוט לפי משקל (selection sort)
+    for (int i = 0; i < edgeCount - 1; ++i) {
+        int minIdx = i;
+        for (int j = i + 1; j < edgeCount; ++j) {
+            if (edges[j].weight < edges[minIdx].weight) {
+                minIdx = j;
+            }
+        }
+        if (minIdx != i) {
+            Edge temp = edges[i];
+            edges[i] = edges[minIdx];
+            edges[minIdx] = temp;
+        }
+    }
+
+    Graph mst(V);
+    int* parent = new int[V];
+    int* rank = new int[V];
+
+    for (int i = 0; i < V; i++) {
+        parent[i] = i;
+        rank[i] = 0;
+    }
+
+    for (int i = 0; i < edgeCount; ++i) {
+        Edge e = edges[i];
+        int uSet = graph::find(parent, e.src);
+        int vSet = graph::find(parent, e.dst);
+
+        if (uSet != vSet) {
+            mst.addEdge(e.src, e.dst, e.weight);
+            graph::unionSets(parent, rank, uSet, vSet);
+        }
+    }
+
+    delete[] parent;
+    delete[] rank;
+    delete[] edges;
+
+    return mst;
+}
 
 }

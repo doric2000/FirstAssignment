@@ -8,6 +8,10 @@ using namespace std;
 
 namespace graph {
 
+    int find(int* parent, int i);
+    void unionSets(int* parent, int* rank, int x, int y);
+
+    
     struct Node { //stands for a Neighbor of a vertex.
         int vertex; // number of the vertex
         int weight;
@@ -27,6 +31,10 @@ namespace graph {
             ~Queue();                                //  desctructor
 
 
+    };
+
+    struct Edge {
+        int src, dst, weight;
     };
 
     class Stack {
@@ -67,6 +75,8 @@ namespace graph {
             PriorityQueue(int capacity);
             ~PriorityQueue();
     };
+
+
 
     class Graph{
   

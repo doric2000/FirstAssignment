@@ -1,21 +1,17 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall
-TARGET = main
-OBJS = main.o graph.o algorithms.o
+OBJS = main.o graph.o algorithms.o priority_queue.o stack.o queue.o
+TARGET = Main
 
-all: $(TARGET)
-
-$(TARGET): $(OBJS)
+# הפקודה הראשית - קומפילציה והרצה של Main
+Main: $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+	./$(TARGET)
 
-main.o: main.cpp graph.hpp
-	$(CXX) $(CXXFLAGS) -c main.cpp
+# בדיקת זליגת זיכרון
+valgrind: Main
+	valgrind --leak-check=full ./$(TARGET)
 
-graph.o: graph.cpp graph.hpp
-	$(CXX) $(CXXFLAGS) -c graph.cpp
-
-algorithms.o: algorithms.cpp graph.hpp
-	$(CXX) $(CXXFLAGS) -c algorithms.cpp
-
+# ניקוי קבצים זמניים
 clean:
 	rm -f *.o $(TARGET)

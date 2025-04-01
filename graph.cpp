@@ -12,6 +12,7 @@ namespace graph{
         this->capacity = capacity;
         this->data = new int[capacity];
         this->top = -1;
+        this->size = 0;
     }
     
     Stack::~Stack(){
@@ -239,7 +240,29 @@ void PriorityQueue::heapifyDown(int index) {
     }
 }
 
+// ============================
+//         UNION SET SECTION
+// ============================  
 
+int find(int* parent, int i) {
+    if (parent[i] != i)
+        parent[i] = find(parent, parent[i]);
+    return parent[i];
+}
+
+void unionSets(int* parent, int* rank, int x, int y) {
+    int xroot = find(parent, x);
+    int yroot = find(parent, y);
+
+    if (rank[xroot] < rank[yroot])
+        parent[xroot] = yroot;
+    else if (rank[xroot] > rank[yroot])
+        parent[yroot] = xroot;
+    else {
+        parent[yroot] = xroot;
+        rank[xroot]++;
+    }
+}
 
 
     
