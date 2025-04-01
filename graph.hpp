@@ -1,3 +1,6 @@
+// dor.cohen15@msmail.ariel.ac.il
+
+
 #ifndef GRAPH_HPP
 #define GRAPH_HPP
 
@@ -11,7 +14,7 @@ namespace graph {
     int find(int* parent, int i);
     void unionSets(int* parent, int* rank, int x, int y);
 
-    
+
     struct Node { //stands for a Neighbor of a vertex.
         int vertex; // number of the vertex
         int weight;

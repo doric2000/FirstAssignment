@@ -1,17 +1,23 @@
+# קומפיילר ודגלים
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall
-OBJS = main.o graph.o algorithms.o priority_queue.o stack.o queue.o
-TARGET = Main
 
-# הפקודה הראשית - קומפילציה והרצה של Main
-Main: $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+# קבצי המקור והאובייקט
+SRC = main.cpp graph.cpp algorithms.cpp
+OBJ = $(SRC:.cpp=.o)
+
+# שם הקובץ המהודר
+TARGET = main
+
+# קומפילציה והרצה
+Main: $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ)
 	./$(TARGET)
 
-# בדיקת זליגת זיכרון
-valgrind: Main
+# valgrind לבדוק זיכרון
+valgrind: $(TARGET)
 	valgrind --leak-check=full ./$(TARGET)
 
-# ניקוי קבצים זמניים
+# ניקוי קבצי ביניים
 clean:
 	rm -f *.o $(TARGET)
