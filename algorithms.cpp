@@ -22,6 +22,9 @@ namespace graph{
      * @return Graph The BFS tree rooted at 'start'.
      */
     Graph Algorithms::bfs(Graph& g, int start){
+        if (start < 0 || start >= g.getNumVertices()) {
+            throw std::out_of_range("Invalid start vertex in BFS");
+        }
         Graph bfsTree(g.getNumVertices());
         bool* visited = new bool[g.getNumVertices()];
         for (int i = 0; i < g.getNumVertices(); ++i) {
@@ -66,6 +69,9 @@ namespace graph{
      * @return Graph The DFS tree rooted at 'start'.
      */
     Graph Algorithms::dfs(Graph& g, int start) {
+        if (start < 0 || start >= g.getNumVertices()) {
+            throw std::out_of_range("Invalid start vertex in DFS");
+        }
         int vertexNum = g.getNumVertices();
         Graph dfsTree(vertexNum);
     
@@ -115,6 +121,9 @@ namespace graph{
     }
 
     Graph Algorithms::dijkstra(Graph& g, int start) {
+        if (start < 0 || start >= g.getNumVertices()) {
+            throw std::out_of_range("Invalid start vertex in DIJKSTRA");
+        }
         int vertexNum = g.getNumVertices();
         int* distances = new int[vertexNum];
         int* parent = new int[vertexNum];
@@ -238,7 +247,7 @@ Graph Algorithms::kruskal(Graph& g) {
         }
     }
 
-    // מיון פשוט לפי משקל (selection sort)
+    // Selection sort
     for (int i = 0; i < edgeCount - 1; ++i) {
         int minIdx = i;
         for (int j = i + 1; j < edgeCount; ++j) {
@@ -254,30 +263,21 @@ Graph Algorithms::kruskal(Graph& g) {
     }
 
     Graph mst(V);
-    int* parent = new int[V];
-    int* rank = new int[V];
-
-    for (int i = 0; i < V; i++) {
-        parent[i] = i;
-        rank[i] = 0;
-    }
+    graph::UnionFind uf(V);  // שימוש במחלקת UnionFind החדשה
 
     for (int i = 0; i < edgeCount; ++i) {
         Edge e = edges[i];
-        int uSet = graph::find(parent, e.src);
-        int vSet = graph::find(parent, e.dst);
+        int uSet = uf.find(e.src);
+        int vSet = uf.find(e.dst);
 
         if (uSet != vSet) {
             mst.addEdge(e.src, e.dst, e.weight);
-            graph::unionSets(parent, rank, uSet, vSet);
+            uf.unite(uSet, vSet);
         }
     }
 
-    delete[] parent;
-    delete[] rank;
     delete[] edges;
-
     return mst;
-}
 
+    }
 }

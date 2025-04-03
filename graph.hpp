@@ -11,10 +11,6 @@ using namespace std;
 
 namespace graph {
 
-    int find(int* parent, int i);
-    void unionSets(int* parent, int* rank, int x, int y);
-
-
     struct Node { //stands for a Neighbor of a vertex.
         int vertex; // number of the vertex
         int weight;
@@ -33,8 +29,24 @@ namespace graph {
             Queue(int capacity);                 // constructor (does the size is necesiry?)
             ~Queue();                                //  desctructor
 
-
     };
+
+    class UnionFind {
+        private:
+            int* parent;
+            int* rank;
+            int size;
+        
+        public:
+            UnionFind(int size);
+            ~UnionFind();
+        
+            int find(int node);
+            void unite(int u, int v);
+            void reset();
+    };
+        
+        
 
     struct Edge {
         int src, dst, weight;

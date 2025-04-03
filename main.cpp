@@ -11,13 +11,15 @@ void printTitle(const std::string& title) {
 }
 
 int main() {
-    Graph g(6);
+    Graph g(7);
     g.addEdge(0, 1, 2);
     g.addEdge(0, 2, 4);
     g.addEdge(1, 3, 7);
     g.addEdge(1, 4, 1);
     g.addEdge(2, 5, 3);
     g.addEdge(3, 5, 1);
+    g.addEdge(4, 6, 5);
+    g.addEdge(5, 6, 2);
 
     printTitle("Original Graph");
     g.print_graph();
@@ -30,8 +32,8 @@ int main() {
     printTitle("DFS Tree (start = 0)");
     dfsTree.print_graph();
 
-    Graph dijkstraTree = Algorithms::dijkstra(g, 0);
-    printTitle("Dijkstra Tree (start = 0)");
+    Graph dijkstraTree = Algorithms::dijkstra(g, 1);
+    printTitle("Dijkstra Tree (start = 1)");
     dijkstraTree.print_graph();
 
     Graph primTree = Algorithms::prim(g);

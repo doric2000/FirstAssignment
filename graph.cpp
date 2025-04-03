@@ -31,8 +31,7 @@ namespace graph{
      */
     void Stack::push(int vertex) {
         if (this->top >= this->capacity - 1) {
-            std::cout << "Stack is full" << std::endl;
-            return;
+            throw std::overflow_error("Stack is full");
         }
         this->data[++top] = vertex;
         size++;
@@ -51,7 +50,7 @@ namespace graph{
             size--;
             return this->data[top--];
         } else {
-            return 2147483647; 
+            throw std::underflow_error("Stack is empty");
         }
     }
     
@@ -83,7 +82,7 @@ namespace graph{
         if (top != -1) {
             return this->data[top];
         } else {
-            return 2147483647;  // or consider throwing an exception
+            throw std::underflow_error("Stack is empty"); 
         }
     }
     
@@ -123,7 +122,7 @@ namespace graph{
             this->size++;
             return true;
         } else {
-            return false;
+            throw std::overflow_error("Queue is full");
         }
     }
 
@@ -137,7 +136,7 @@ namespace graph{
      */
     int Queue::dequeue() {
         if (isEmpty()) {
-            return 2147483647;  // Or consider throwing an exception instead
+            throw std::underflow_error("Queue is empty");        
         }
         int firstVer = this->data[front];
         this->front = (this->front + 1) % this->capacity;
@@ -246,25 +245,51 @@ void PriorityQueue::heapifyDown(int index) {
 //         UNION SET SECTION
 // ============================  
 
-int find(int* parent, int i) {
-    if (parent[i] != i)
-        parent[i] = find(parent, parent[i]);
-    return parent[i];
-}
+    UnionFind::UnionFind(int size) : size(size) {
+        parent = new int[size];
+        rank = new int[size];
 
-void unionSets(int* parent, int* rank, int x, int y) {
-    int xroot = find(parent, x);
-    int yroot = find(parent, y);
-
-    if (rank[xroot] < rank[yroot])
-        parent[xroot] = yroot;
-    else if (rank[xroot] > rank[yroot])
-        parent[yroot] = xroot;
-    else {
-        parent[yroot] = xroot;
-        rank[xroot]++;
+        for (int i = 0; i < size; ++i) {
+            parent[i] = i;
+            rank[i] = 0;
+        }
     }
-}
+
+    UnionFind::~UnionFind() {
+        delete[] parent;
+        delete[] rank;
+    }
+
+    int UnionFind::find(int node) {
+        if (parent[node] != node) {
+            parent[node] = find(parent[node]);
+        }
+        return parent[node];
+    }
+
+    void UnionFind::unite(int u, int v) {
+        int uRoot = find(u);
+        int vRoot = find(v);
+
+        if (uRoot == vRoot)
+            return;
+
+        if (rank[uRoot] < rank[vRoot]) {
+            parent[uRoot] = vRoot;
+        } else if (rank[uRoot] > rank[vRoot]) {
+            parent[vRoot] = uRoot;
+        } else {
+            parent[vRoot] = uRoot;
+            rank[uRoot]++;
+        }
+    }
+
+    void UnionFind::reset() {
+        for (int i = 0; i < size; ++i) {
+            parent[i] = i;
+            rank[i] = 0;
+        }
+    }
 
 
     
@@ -308,6 +333,10 @@ void unionSets(int* parent, int* rank, int x, int y) {
 
     void Graph::addEdge(int src,int dst,int weight=1) 
     {
+        // check if the source and destination vertices are within valid range
+        if (src < 0 || src >= numVertices || dst < 0 || dst >= numVertices) {
+            throw std::out_of_range("Vertex index out of range.");
+        }
         Node* edge1 = new Node(dst,weight);
         edge1->next = adjList[src];
         adjList[src] = edge1; 
@@ -317,56 +346,69 @@ void unionSets(int* parent, int* rank, int x, int y) {
         adjList[dst] = edge2;
     }
 
-    void Graph::removeEdge(int src,int dst) 
+    void Graph::removeEdge(int src, int dst) 
     {
+        // check if the source and destination vertices are within valid range
+        if (src < 0 || src >= numVertices || dst < 0 || dst >= numVertices) {
+            throw std::out_of_range("Vertex index out of range.");
+        }
+    
+        bool found = false;
+    
         // first side delete:
         Node* curr = adjList[src];  
         Node* prev = nullptr;
         
-        while (curr!= nullptr && curr->vertex != dst) // while there are vertexes and the current vertex is not the one we are looking for.
+        while (curr != nullptr && curr->vertex != dst) // while there are vertexes and the current vertex is not the one we are looking for.
         {
             prev = curr;
             curr = curr->next;
         }
-
-        if (curr!= nullptr){
+    
+        if (curr != nullptr){
+            found = true;
             if (prev == nullptr) { //if curr is the head than delete the head
-                
                 adjList[src] = curr->next;
             }
-            else{               // if curr is between two nodes than skip curr.
+            else{ // if curr is between two nodes than skip curr.
                 prev->next = curr->next;
             }
-
+    
             delete curr; // now we will have to clean the mem
         }
-
-
+    
         // second side delete:
         curr = adjList[dst]; 
         prev = nullptr;
-
-        while (curr!= nullptr && curr->vertex != src) // while there are vertexes and the current vertex is not the one we are looking for.
+    
+        while (curr != nullptr && curr->vertex != src) // while there are vertexes and the current vertex is not the one we are looking for.
         {
             prev = curr;
             curr = curr->next;
         }
-
-        if (curr!= nullptr){
+    
+        if (curr != nullptr){
             if (prev == nullptr) { //if curr is the head than delete the head
-                
                 adjList[dst] = curr->next;
             }
-            else{               // if curr is between two nodes than skip curr.
+            else{ // if curr is between two nodes than skip curr.
                 prev->next = curr->next;
             }
-
+    
             delete curr; // now we will have to clean the mem
         }
-
+    
+        // if edge wasn't found in src list, it doesn't exist at all
+        if (!found) {
+            throw std::runtime_error("Edge does not exist.");
+        }
     }
 
     void Graph::addDirectedEdge(int src, int dst, int weight) {
+        // check if the source and destination vertices are within valid range
+        if (src < 0 || src >= numVertices || dst < 0 || dst >= numVertices) {
+            throw std::out_of_range("Vertex index out of range.");
+        }
         Node* edge = new Node(dst, weight);
         edge->next = adjList[src];
         adjList[src] = edge;
