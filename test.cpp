@@ -55,6 +55,26 @@ TEST_CASE("GRAPH - add2directiones , add1directon , remove") {
         CHECK_THROWS(g.removeEdge(1, 9));  // 1-->9 not in range
     }
 
+    SUBCASE("removeEdge should remove undirected edge") {
+        Graph g(3);
+        g.addEdge(0, 1, 5);
+        g.removeEdge(0, 1);
+    
+        Node** adj = g.getAdjList();
+    
+        // check both sides are gone
+        CHECK(adj[0] == nullptr);
+        CHECK(adj[1] == nullptr);
+    }
+    
+    SUBCASE("removeEdge should throw if edge does not exist") {
+        Graph g(3);
+        g.addEdge(0, 1, 5);
+        g.removeEdge(0, 1);
+        CHECK_THROWS_AS(g.removeEdge(0, 1), std::runtime_error);
+    }
+    
+
 }
 
 TEST_CASE("GRAPH - print") {
@@ -77,6 +97,24 @@ TEST_CASE("GRAPH - print") {
     CHECK(output.find("(1, weight = 2)") != std::string::npos);
     CHECK(output.find("(2, weight = 3)") != std::string::npos);
 
+    SUBCASE("print_graph adjacency list") {
+        Graph g(2);
+        g.addEdge(0, 1, 7);
+    
+        std::ostringstream buffer;
+        std::streambuf* oldCout = std::cout.rdbuf();
+        std::cout.rdbuf(buffer.rdbuf());
+    
+        g.print_graph();
+    
+        std::cout.rdbuf(oldCout); // restore cout
+    
+        std::string output = buffer.str();
+        CHECK(output.find("0 --->") != std::string::npos);
+        CHECK(output.find("(1, weight = 7)") != std::string::npos);
+        CHECK(output.find("1 --->") != std::string::npos);
+        CHECK(output.find("(0, weight = 7)") != std::string::npos);
+    }
 }
 
 // ============================
@@ -226,6 +264,8 @@ TEST_CASE("UNION-FIND - basic operations, structure integrity, path compression"
         uf.unite(4, 4);
         CHECK(uf.find(4) == 4);
     }
+
+    
 }
 // ============================
 //         EDGE SECTION
@@ -607,3 +647,126 @@ TEST_CASE("dijkstra basic behavior") {
 // ALGORITHMS SECTION - PRIM
 // ============================ 
 
+TEST_CASE("PRIM") {
+
+    SUBCASE("prim on connected graph") {
+        Graph g(5);
+        g.addEdge(0, 1, 2);
+        g.addEdge(0, 3, 6);
+        g.addEdge(1, 2, 3);
+        g.addEdge(1, 3, 8);
+        g.addEdge(1, 4, 5);
+        g.addEdge(2, 4, 7);
+        g.addEdge(3, 4, 9);
+
+        Graph mst = Algorithms::prim(g);
+        Node** adj = mst.getAdjList();
+
+        // The MST should have exactly 4 edges (undirected → appears 8 times)
+        int edgeCount = 0;
+        for (int i = 0; i < 5; ++i) {
+            Node* curr = adj[i];
+            while (curr != nullptr) {
+                edgeCount++;
+                curr = curr->next;
+            }
+        }
+
+        CHECK(edgeCount == 8); // 4 edges × 2 sides
+    }
+
+    SUBCASE("prim on graph with two components") {
+        Graph g(6);
+        g.addEdge(0, 1, 1);
+        g.addEdge(1, 2, 2);
+        g.addEdge(3, 4, 3); // disconnected component
+
+        Graph mst = Algorithms::prim(g);
+        Node** adj = mst.getAdjList();
+
+        // only the component 0-1-2 should appear
+        CHECK(adj[0] != nullptr);
+        CHECK(adj[1] != nullptr);
+        CHECK(adj[2] != nullptr);
+
+        // component 3-4 should not be touched
+        CHECK(adj[3] == nullptr);
+        CHECK(adj[4] == nullptr);
+        CHECK(adj[5] == nullptr);
+    }
+
+    SUBCASE("prim on single node") {
+        Graph g(1);
+        Graph mst = Algorithms::prim(g);
+        CHECK(mst.getAdjList()[0] == nullptr);
+    }
+}
+
+// ============================
+// ALGORITHMS SECTION - KRUSKAL
+// ============================ 
+
+TEST_CASE("KRUSKAL") {
+
+    SUBCASE("kruskal on connected graph") {
+        Graph g(5);
+        g.addEdge(0, 1, 1);
+        g.addEdge(0, 2, 5);
+        g.addEdge(1, 2, 3);
+        g.addEdge(1, 3, 4);
+        g.addEdge(2, 4, 2);
+
+        Graph mst = Algorithms::kruskal(g);
+        Node** adj = mst.getAdjList();
+
+        // The MST should have exactly 4 edges => 8 nodes in undirected adj list
+        int edgeCount = 0;
+        for (int i = 0; i < 5; ++i) {
+            Node* curr = adj[i];
+            while (curr != nullptr) {
+                edgeCount++;
+                curr = curr->next;
+            }
+        }
+
+        CHECK(edgeCount == 8); // undirected: each edge appears twice
+    }
+
+    SUBCASE("kruskal on graph with two components") {
+        Graph g(6);
+        g.addEdge(0, 1, 1);
+        g.addEdge(1, 2, 2);
+        g.addEdge(3, 4, 3); // disconnected component
+
+        Graph mst = Algorithms::kruskal(g);
+        Node** adj = mst.getAdjList();
+
+        // component 0-1-2
+        CHECK(adj[0] != nullptr);
+        CHECK(adj[1] != nullptr);
+        CHECK(adj[2] != nullptr);
+
+        // component 3-4 (only one edge, should be included too)
+        CHECK(adj[3] != nullptr);
+        CHECK(adj[4] != nullptr);
+
+        // node 5 is isolated
+        CHECK(adj[5] == nullptr);
+    }
+
+    SUBCASE("kruskal on graph with no edges") {
+        Graph g(3);
+        Graph mst = Algorithms::kruskal(g);
+        Node** adj = mst.getAdjList();
+
+        CHECK(adj[0] == nullptr);
+        CHECK(adj[1] == nullptr);
+        CHECK(adj[2] == nullptr);
+    }
+
+    SUBCASE("kruskal on single node") {
+        Graph g(1);
+        Graph mst = Algorithms::kruskal(g);
+        CHECK(mst.getAdjList()[0] == nullptr);
+    }
+}
