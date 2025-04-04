@@ -162,84 +162,120 @@ namespace graph{
 //     PRIORITY QUEUE SECTION
 // ============================
     
-PriorityQueue::PriorityQueue(int capacity) {
-    this->capacity = capacity;
-    this->heap = new HeapNode[capacity];
-    this->size = 0;
-}
-
-PriorityQueue::~PriorityQueue() {
-    delete[] heap;
-}
-
-void PriorityQueue::insert(int vertex, int priority) {
-    if (size == capacity) {
-        std::cout << "Priority Queue is full." << std::endl;
-        return;
+    PriorityQueue::PriorityQueue(int capacity) {
+        this->capacity = capacity;
+        this->heap = new HeapNode[capacity];
+        this->size = 0;
     }
-    heap[size] = {vertex, priority};
-    heapifyUp(size);
-    size++;
-}
 
-int PriorityQueue::extractMin() {
-    if (isEmpty()) {
-        std::cout << "Priority Queue is empty." << std::endl;
-        return 2147483647;
+    PriorityQueue::~PriorityQueue() {
+        delete[] heap;
     }
-    int minVertex = heap[0].vertex;
-    heap[0] = heap[size - 1];
-    size--;
-    heapifyDown(0);
-    return minVertex;
-}
 
-void PriorityQueue::decreaseKey(int vertex, int newPriority) {
-    for (int i = 0; i < size; i++) {
-        if (heap[i].vertex == vertex) {
-            if (newPriority < heap[i].priority) {
-                heap[i].priority = newPriority;
-                heapifyUp(i);
+    /**
+     * @brief Inserts a vertex into the priority queue with a given priority.
+     *        If the queue is full, the function prints a warning and returns.
+     * 
+     * @param vertex The vertex to insert.
+     * @param priority The priority value (lower means higher priority).
+     */
+    void PriorityQueue::insert(int vertex, int priority) {
+        if (size == capacity) {
+            std::cout << "Priority Queue is full." << std::endl;
+            return;
+        }
+        heap[size] = {vertex, priority};
+        heapifyUp(size);
+        size++;
+    }
+
+    /**
+     * @brief Removes and returns the vertex with the smallest priority value.
+     *        If the queue is empty, prints a message and returns INT_MAX.
+     * 
+     * @return int The vertex with the minimum priority, or 2147483647 if empty.
+     */
+    int PriorityQueue::extractMin() {
+        if (isEmpty()) {
+            std::cout << "Priority Queue is empty." << std::endl;
+            return 2147483647;
+        }
+        int minVertex = heap[0].vertex;
+        heap[0] = heap[size - 1];
+        size--;
+        heapifyDown(0);
+        return minVertex;
+    }
+    /**
+     * @brief Updates the priority of a given vertex if the new priority is lower.
+     *        Used in Dijkstra's and Prim's algorithms to update paths.
+     * 
+     * @param vertex The vertex to update.
+     * @param newPriority The new (lower) priority value.
+     */
+    void PriorityQueue::decreaseKey(int vertex, int newPriority) {
+        for (int i = 0; i < size; i++) {
+            if (heap[i].vertex == vertex) {
+                if (newPriority < heap[i].priority) {
+                    heap[i].priority = newPriority;
+                    heapifyUp(i);
+                }
+                break;
             }
-            break;
         }
     }
-}
 
-bool PriorityQueue::isEmpty() {
-    return size == 0;
-}
-
-void PriorityQueue::heapifyUp(int index) {
-    while (index > 0) {
-        int parent = (index - 1) / 2;
-        if (heap[parent].priority <= heap[index].priority) {
-            break;
-        }
-        std::swap(heap[parent], heap[index]);
-        index = parent;
+    /**
+     * @brief Updates the priority of a given vertex if the new priority is lower.
+     *        Used in Dijkstra's and Prim's algorithms to update paths.
+     * 
+     * @param vertex The vertex to update.
+     * @param newPriority The new (lower) priority value.
+     */
+    bool PriorityQueue::isEmpty() {
+        return size == 0;
     }
-}
-
-void PriorityQueue::heapifyDown(int index) {
-    while (2 * index + 1 < size) {
-        int left = 2 * index + 1;
-        int right = 2 * index + 2;
-        int smallest = index;
-
-        if (left < size && heap[left].priority < heap[smallest].priority) {
-            smallest = left;
+    /**
+     * @brief Restores the heap property by moving an element up the tree.
+     *        Called after inserting a new element.
+     * 
+     * @param index The index of the newly inserted element.
+     */
+    void PriorityQueue::heapifyUp(int index) {
+        while (index > 0) {
+            int parent = (index - 1) / 2;
+            if (heap[parent].priority <= heap[index].priority) {
+                break;
+            }
+            std::swap(heap[parent], heap[index]);
+            index = parent;
         }
-        if (right < size && heap[right].priority < heap[smallest].priority) {
-            smallest = right;
-        }
-        if (smallest == index) {
-            break;
-        }
-        std::swap(heap[index], heap[smallest]);
-        index = smallest;
     }
-}
+    /**
+     * @brief Restores the heap property by moving an element down the tree.
+     *        Called after removing the root element.
+     * 
+     * @param index The index of the element to heapify down from.
+     */
+    void PriorityQueue::heapifyDown(int index) {
+        while (2 * index + 1 < size) {
+            int left = 2 * index + 1;
+            int right = 2 * index + 2;
+            int smallest = index;
+
+            if (left < size && heap[left].priority < heap[smallest].priority) {
+                smallest = left;
+            }
+            if (right < size && heap[right].priority < heap[smallest].priority) {
+                smallest = right;
+            }
+            if (smallest == index) {
+                break;
+            }
+            std::swap(heap[index], heap[smallest]);
+            index = smallest;
+        }
+    }
 
 // ============================
 //         UNION SET SECTION
@@ -259,14 +295,26 @@ void PriorityQueue::heapifyDown(int index) {
         delete[] parent;
         delete[] rank;
     }
-
+    /**
+     * @brief Finds the representative (root) of the set that contains the given node.
+     *        Implements path compression to flatten the structure for efficiency.
+     * 
+     * @param node The node whose set representative is to be found.
+     * @return int The representative of the set containing the node.
+     */
     int UnionFind::find(int node) {
         if (parent[node] != node) {
             parent[node] = find(parent[node]);
         }
         return parent[node];
     }
-
+    /**
+     * @brief Unites the sets that contain the given two nodes.
+     *        Uses union by rank to keep the tree shallow and efficient.
+     * 
+     * @param u The first node.
+     * @param v The second node.
+     */
     void UnionFind::unite(int u, int v) {
         int uRoot = find(u);
         int vRoot = find(v);
@@ -283,7 +331,10 @@ void PriorityQueue::heapifyDown(int index) {
             rank[uRoot]++;
         }
     }
-
+    /**
+     * @brief Resets the Union-Find structure, making each element its own parent.
+     *        Also resets all ranks to zero.
+     */
     void UnionFind::reset() {
         for (int i = 0; i < size; ++i) {
             parent[i] = i;
@@ -321,16 +372,33 @@ void PriorityQueue::heapifyDown(int index) {
         delete[] adjList;
 
     }
-
+    
+    /**
+     * @brief Returns the number of vertices in the graph.
+     * 
+     * @return int Number of vertices.
+     */
     int Graph::getNumVertices(){
         return this->numVertices;
 
     }
-
+    /**
+     * @brief Returns the adjacency list of the graph.
+     * 
+     * @return Node** A pointer to the array of adjacency lists.
+     */
     Node** Graph::getAdjList(){
         return adjList;
     }
-
+    
+    /**
+     * @brief Adds an undirected edge between two vertices with a given weight.
+     *        If the vertices are invalid, throws an out_of_range exception.
+     * 
+     * @param src The source vertex.
+     * @param dst The destination vertex.
+     * @param weight The weight of the edge (default = 1).
+     */
     void Graph::addEdge(int src,int dst,int weight=1) 
     {
         // check if the source and destination vertices are within valid range
@@ -345,7 +413,15 @@ void PriorityQueue::heapifyDown(int index) {
         edge2->next = adjList[dst];
         adjList[dst] = edge2;
     }
-
+    
+    /**
+     * @brief Removes an undirected edge between two vertices.
+     *        If the edge does not exist, throws a runtime_error.
+     *        If the vertices are invalid, throws an out_of_range exception.
+     * 
+     * @param src The source vertex.
+     * @param dst The destination vertex.
+     */
     void Graph::removeEdge(int src, int dst) 
     {
         // check if the source and destination vertices are within valid range
@@ -403,7 +479,15 @@ void PriorityQueue::heapifyDown(int index) {
             throw std::runtime_error("Edge does not exist.");
         }
     }
-
+    
+    /**
+     * @brief Adds a directed edge from src to dst with a given weight.
+     *        If the vertices are invalid, throws an out_of_range exception.
+     * 
+     * @param src The source vertex.
+     * @param dst The destination vertex.
+     * @param weight The weight of the edge.
+     */
     void Graph::addDirectedEdge(int src, int dst, int weight) {
         // check if the source and destination vertices are within valid range
         if (src < 0 || src >= numVertices || dst < 0 || dst >= numVertices) {
@@ -413,7 +497,10 @@ void PriorityQueue::heapifyDown(int index) {
         edge->next = adjList[src];
         adjList[src] = edge;
     }
-
+    /**
+     * @brief Prints the adjacency list of the graph to the standard output.
+     *        Format: vertex ---> (neighbor, weight) ...
+     */
     void Graph::print_graph()
     {
         std::cout << "Graph adjacency list: \n";

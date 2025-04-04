@@ -1,4 +1,4 @@
-#dor.cohen15@msmail.ariel.ac.il
+# dor.cohen15@msmail.ariel.ac.il
 
 # Compiler and flags
 CXX = g++
@@ -13,23 +13,24 @@ TARGET = main
 TEST_SRC = test.cpp graph.cpp algorithms.cpp
 TEST_BIN = test
 
-# Rule: build the main program (without running it)
+#always run! those are no real files ..
+.PHONY: Main test valgrind clean
+
+# Rule: build and run the main demo
 Main: $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ)
-
-# Rule: run the main program
-run: Main
 	./$(TARGET)
 
-# Rule: compile and run tests
+# Rule: build and run unit tests
 test: $(TEST_SRC)
 	$(CXX) $(CXXFLAGS) -I. -o $(TEST_BIN) $(TEST_SRC)
 	./$(TEST_BIN)
 
-# Rule: check memory leaks with valgrind
-valgrind: Main
+# Rule: check for memory leaks with valgrind
+valgrind: $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ)
 	valgrind --leak-check=full ./$(TARGET)
 
-# Rule: clean up all build files
+# Rule: remove all generated files
 clean:
 	rm -f *.o $(TARGET) $(TEST_BIN)

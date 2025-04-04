@@ -111,7 +111,19 @@ namespace graph{
 // ============================
 //         DIJKSTRA SECTION
 // ============================
-
+    /**
+     * @brief Performs the relaxation step of Dijkstra's algorithm.
+     *        If the path from u to v through the current edge (u → v)
+     *        provides a shorter distance, updates the distance and parent.
+     *        Also updates the priority queue with the new distance.
+     * 
+     * @param u The current vertex being processed.
+     * @param v The neighbor vertex connected to u.
+     * @param weight The weight of the edge (u → v).
+     * @param distances Array of current shortest distances from the source vertex.
+     * @param parent Array holding the previous vertex on the shortest path to each node.
+     * @param pq Priority queue used to select the next vertex to process.
+     */
     void Algorithms::relax(int u, int v, int weight, int* distances, int* parent, PriorityQueue& pq) {
         if (distances[u] + weight < distances[v]) {
             distances[v] = distances[u] + weight;
@@ -120,6 +132,17 @@ namespace graph{
         }
     }
 
+    /**
+     * @brief Computes the shortest paths from a start vertex to all other vertices using Dijkstra's algorithm.
+     *        The result is returned as a directed tree (shortest path tree), where each edge represents the 
+     *        shortest path from the parent to the child.
+     * 
+     * @param g The input graph (undirected, with positive edge weights).
+     * @param start The starting vertex to run the algorithm from.
+     * @return Graph The shortest-path tree as a directed graph.
+     * 
+     * @throws std::out_of_range If the start vertex is not within the valid range.
+     */
     Graph Algorithms::dijkstra(Graph& g, int start) {
         if (start < 0 || start >= g.getNumVertices()) {
             throw std::out_of_range("Invalid start vertex in DIJKSTRA");
@@ -155,7 +178,7 @@ namespace graph{
                 neighbor = neighbor->next;
             }
         }
-    
+        
         Graph shortestTree(vertexNum);
         for (int i = 0; i < vertexNum; i++) {
             if (parent[i] != -1) {
@@ -174,7 +197,14 @@ namespace graph{
 // ============================
 //         PRIM SECTION
 // ============================
-
+    /**
+     * @brief Computes the Minimum Spanning Tree (MST) of a graph using Prim's algorithm.
+     *        The function assumes that the graph is connected (or will compute the MST of the connected component
+     *        starting from vertex 0). The result is returned as an undirected graph representing the MST.
+     * 
+     * @param g The input graph (undirected, weighted).
+     * @return Graph The resulting MST as an undirected graph.
+     */
     Graph Algorithms::prim(Graph& g) {
         int V = g.getNumVertices();
         Graph mst(V);
@@ -229,55 +259,63 @@ namespace graph{
 // ============================
 //       KRUSKAL SECTION
 // ============================
-Graph Algorithms::kruskal(Graph& g) {
-    int V = g.getNumVertices();
-    Edge* edges = new Edge[V * V];
-    int edgeCount = 0;
-    Node** adjList = g.getAdjList();
+    /**
+     * @brief Computes the Minimum Spanning Tree (MST) of the input graph using Kruskal's algorithm.
+     *        The algorithm sorts all edges by weight and adds the smallest ones to the MST,
+     *        as long as they do not form a cycle (using Union-Find to track connected components).
+     * 
+     * @param g The input graph (undirected, weighted).
+     * @return Graph The resulting MST as an undirected graph.
+     */
+    Graph Algorithms::kruskal(Graph& g) {
+        int V = g.getNumVertices();
+        Edge* edges = new Edge[V * V];
+        int edgeCount = 0;
+        Node** adjList = g.getAdjList();
 
-    for (int u = 0; u < V; u++) {
-        Node* neighbor = adjList[u];
-        while (neighbor != nullptr) {
-            int v = neighbor->vertex;
-            int w = neighbor->weight;
-            if (u < v) {
-                edges[edgeCount++] = {u, v, w};
+        for (int u = 0; u < V; u++) {
+            Node* neighbor = adjList[u];
+            while (neighbor != nullptr) {
+                int v = neighbor->vertex;
+                int w = neighbor->weight;
+                if (u < v) {
+                    edges[edgeCount++] = {u, v, w};
+                }
+                neighbor = neighbor->next;
             }
-            neighbor = neighbor->next;
         }
-    }
 
-    // Selection sort
-    for (int i = 0; i < edgeCount - 1; ++i) {
-        int minIdx = i;
-        for (int j = i + 1; j < edgeCount; ++j) {
-            if (edges[j].weight < edges[minIdx].weight) {
-                minIdx = j;
+        // Selection sort
+        for (int i = 0; i < edgeCount - 1; ++i) {
+            int minIdx = i;
+            for (int j = i + 1; j < edgeCount; ++j) {
+                if (edges[j].weight < edges[minIdx].weight) {
+                    minIdx = j;
+                }
+            }
+            if (minIdx != i) {
+                Edge temp = edges[i];
+                edges[i] = edges[minIdx];
+                edges[minIdx] = temp;
             }
         }
-        if (minIdx != i) {
-            Edge temp = edges[i];
-            edges[i] = edges[minIdx];
-            edges[minIdx] = temp;
+
+        Graph mst(V);
+        graph::UnionFind uf(V); 
+
+        for (int i = 0; i < edgeCount; ++i) {
+            Edge e = edges[i];
+            int uSet = uf.find(e.src);
+            int vSet = uf.find(e.dst);
+
+            if (uSet != vSet) {
+                mst.addEdge(e.src, e.dst, e.weight);
+                uf.unite(uSet, vSet);
+            }
         }
-    }
 
-    Graph mst(V);
-    graph::UnionFind uf(V);  // שימוש במחלקת UnionFind החדשה
+        delete[] edges;
+        return mst;
 
-    for (int i = 0; i < edgeCount; ++i) {
-        Edge e = edges[i];
-        int uSet = uf.find(e.src);
-        int vSet = uf.find(e.dst);
-
-        if (uSet != vSet) {
-            mst.addEdge(e.src, e.dst, e.weight);
-            uf.unite(uSet, vSet);
         }
-    }
-
-    delete[] edges;
-    return mst;
-
-    }
 }
